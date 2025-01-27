@@ -1,0 +1,41 @@
+columns:
+ - ID: object
+ - Delivery_person_ID: object
+ - Delivery_person_Age: float64
+ - Delivery_person_Ratings: float64
+ - Restaurant_latitude: float64
+ - Restaurant_longitude: float64
+ - Delivery_location_latitude: float64
+ - Delivery_location_longitude: float64
+ - Type_of_order: object
+ - Type_of_vehicle: object
+ - temperature: float64
+ - humidity: float64
+ - precipitation: float64
+ - weather_description: object
+ - "Unnamed: 14": float64
+ - Traffic_Level: object
+ - Distance (km): float64
+ - TARGET: object
+
+numerical_columns:
+ - Delivery_person_Age
+ - Delivery_person_Ratings
+ - Restaurant_latitude
+ - Restaurant_longitude
+ - Delivery_location_latitude
+ - Delivery_location_longitude
+ - temperature
+ - humidity
+ - precipitation
+ - "Unnamed: 14"
+ - Distance (km) 
+
+categorical_columns:
+ - ID
+ - Delivery_person_ID
+ - Type_of_order
+ - Type_of_vehicle
+ - weather_description
+ - Traffic_Level
+ - TARGET
