@@ -3,8 +3,9 @@ from fooddelivery.entity.config_entity import DataValidationConfig
 from fooddelivery.exception.exception import FoodDeliveryException
 from fooddelivery.logging.logger import logging
 from fooddelivery.constant.training_pipeline import SCHEMA_FILE_PATH
-from scipy.stats import ks_2samp
+from scipy.stats import ks_2samp, chi2_contingency
 import pandas as pd
+import numpy as np
 import os
 import sys
 from fooddelivery.utils.main_utils.utils import read_yaml_file, write_yaml_file
@@ -103,21 +104,75 @@ class DataValidation:
             raise FoodDeliveryException(e,sys)
         
     def detect_dataset_drift(self, base_df, current_df, threshold = 0.05) -> bool:
+        """
+        Detects dataset drift for numerical and categorical columns.
+
+        Args:
+            base_df (pd.DataFrame): Baseline dataset.
+            current_df (pd.DataFrame): Current dataset to compare against the baseline.
+            threshold (float): Significance level for drift detection. Default is 0.05.
+
+        Returns:
+            bool: True if drift is detected in any column, False otherwise.
+        """
         try:
+            # Validate column consistency
+            if not all(base_df.columns == current_df.columns):
+                raise ValueError("Columns in base_df and current_df do not match.")
+            
+            # Initialize drift status
             status = True
             report = {}
-            for column in base_df.columns:
-                d1 = base_df[column]
-                d2 = current_df[column]
+
+            # Split columns into numerical and categorical
+            numerical_columns = base_df.select_dtypes(include=[np.number]).columns
+            categorical_columns = base_df.select_dtypes(exclude=[np.number]).columns
+
+            # Check drift for numerical columns using KS test
+            for column in numerical_columns:
+                d1 = base_df[column].dropna()
+                d2 = current_df[column].dropna()
+
                 is_sample_dist = ks_2samp(d1,d2)
-                if threshold <= is_sample_dist.pvalue:
-                    is_found = False
-                else:
-                    is_found = True
+                p_value = is_sample_dist.pvalue
+                is_drift_detected = p_value < threshold
+
+                if is_drift_detected:
+                    # Update drift status if any column shows drift
                     status = False
+
                 report.update({column:{
-                    "p_value": float(is_sample_dist.pvalue),
-                    "drift_status": is_found
+                    "type": "numerical",
+                    "p_value": float(p_value),
+                    "drift_status": is_drift_detected
+                }})
+
+            # Check drift for categorical columns using Chi-Square test
+            for column in categorical_columns:
+                base_counts = base_df[column].value_counts(normalize=True)
+                current_counts = current_df[column].value_counts(normalize=True)
+
+                # Align categories between the two datasets
+                combined_categories = base_counts.index.union(current_counts.index)
+                base_counts = base_counts.reindex(combined_categories, fill_value=0)
+                current_counts = current_counts.reindex(combined_categories, fill_value=0)
+
+                contingency_table = pd.DataFrame({
+                    "base": base_counts,
+                    "current": current_counts
+                }).T
+
+                chi2_test = chi2_contingency(contingency_table)
+                p_value = chi2_test[1]
+                is_drift_detected = p_value < threshold
+
+                if is_drift_detected:
+                    status = False  # Update drift status if any column shows drift
+
+                report.update({column:{
+                    "type": "categorical",
+                    "p_value": float(p_value),
+                    "drift_status": is_drift_detected
                 }})
 
             drift_report_file_path = self.data_validation_config.drift_report_file_path
@@ -126,6 +181,8 @@ class DataValidation:
             dir_path = os.path.dirname(drift_report_file_path)
             os.makedirs(dir_path,exist_ok=True)
             write_yaml_file(file_path=drift_report_file_path, content=report)
+
+            return status
 
         except Exception as e:
             raise FoodDeliveryException(e,sys)

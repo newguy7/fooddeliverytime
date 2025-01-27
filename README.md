@@ -8,7 +8,8 @@
 
 ### Since missing values for Restaurant_latitude, Restaurant_longitude means the starting point is unknown, we will remove the rows that has these nan values. 
 ### For Distance (km), we will use function to calculate distance using OSRM API to fill the missing values. After this if there are still some nan values, we will remove the rows.
-### For Traffic_Level, we will use KNNImputer to handle the missing values
 
 ### Since the output column is named "TARGET" and it has 541 missing values. We dont want to include generated data for this column as it impacts the models learning accuracy.
 ## So we will remove the rows that has nan values for column TARGET
+
+### For Traffic_Level, we will use SimpleImputer to handle the missing values (categorical data)
