@@ -32,8 +32,10 @@ from xgboost import XGBRegressor
 from sklearn.utils.estimator_checks import check_estimator
 
 import mlflow
-# import dagshub
-# dagshub.init(repo_owner='newguy7', repo_name='fooddeliverytime', mlflow=True)
+
+# Track MLFLOW EXPERIMENT TRACKING WITH REMOTE RESPONSE
+import dagshub
+dagshub.init(repo_owner='newguy7', repo_name='fooddeliverytime', mlflow=True)
 
 
 class ModelTrainer:
