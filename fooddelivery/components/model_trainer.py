@@ -138,6 +138,9 @@ class ModelTrainer:
             network_model = NetworkModel(preprocessor=preprocessor, model=best_model)
             save_object(file_path=self.model_trainer_config.trained_model_file_path, obj=network_model)
 
+            # save it in the final_models folder, for model pusher purpose
+            save_object("final_models/model.pkl", best_model)
+
             # Model Trainer Artifact
             model_trainer_artifact = ModelTrainerArtifact(trained_model_file_path=self.model_trainer_config.trained_model_file_path,
                                                           train_metric_artifact=regression_train_metric,
