@@ -1,12 +1,14 @@
 python-dotenv
 pandas
-numpy
+numpy==1.23.5
+scipy==1.9.3
+scipy
 ipykernel
 pymongo
 certifi
 pymongo==4.10.1
 pymongo[srv]
-scikit-learn
+scikit-learn==1.2.2
 mlflow
 pyaml
 # dill
@@ -15,5 +17,8 @@ dagshub
 fastapi
 uvicorn
 python-multipart
+
+xgboost
+
 
 ##-e .

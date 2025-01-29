@@ -6,6 +6,8 @@ import pandas as pd
 
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.compose import ColumnTransformer
 
 from fooddelivery.constant.training_pipeline import TARGET_COLUMN
 from fooddelivery.constant.training_pipeline import DATA_TRANSFORMATION_IMPUTER_PARAMS
@@ -61,46 +63,82 @@ class DataTransformation:
             logging.error(f"Error calculating distance for row {row.name}: {e}")
             raise FoodDeliveryException(e, sys)
 
-    def get_data_transformer_object(cls) -> Pipeline:
+    def get_data_transformer_object(cls, numerical_columns: list, categorical_columns: list) -> Pipeline:
         """
-        It initialises a SimpleImputer object with the parameters specified in the training_pipeline.py file
-        and returns a pipeline object with the SimpleImputer object as the first step.
+        Creates a ColumnTransformer pipeline with preprocessing steps for both numerical and categorical data.
+        
+        Numerical:
+            - Impute missing values with mean.
+            - Standardize features with StandardScaler.
+            
+        Categorical:
+            - Impute missing values with the most frequent value.
+            - Apply OneHotEncoder to convert categories to numeric form.
 
         Args:
             cls: DataTransformation
+            numerical_columns: List of numerical column names.
+            categorical_columns: List of categorical column names.
 
         Returns:
-            A pipeline object
+            A ColumnTransformer object for preprocessing.
         """
         try:
-            imputer = SimpleImputer(**DATA_TRANSFORMATION_IMPUTER_PARAMS)
-            logging.info(
-                f"Initialise SimpleImputer with {DATA_TRANSFORMATION_IMPUTER_PARAMS}"
+            # Categorical preprocessing: Impute and one-hot encode
+            categorical_pipeline = Pipeline(steps=[
+                ('imputer', SimpleImputer(strategy='most_frequent')),  # Impute missing with most frequent
+                ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False))  # One-hot encode
+            ])
+
+            # Numerical preprocessing: Impute and scale
+            numerical_pipeline = Pipeline(steps=[
+                ('imputer', SimpleImputer(strategy='mean')),  # Impute missing with mean
+                ('scaler', StandardScaler())  # Scale features
+            ])
+
+            # Combine pipelines in a ColumnTransformer
+            processor = ColumnTransformer(
+                transformers=[
+                    ('num', numerical_pipeline, numerical_columns),
+                    ('cat', categorical_pipeline, categorical_columns)
+                ]
             )
-            processor:Pipeline = Pipeline([("imputer", imputer)])
+
+            logging.info("Created data transformer pipeline successfully.")
             return processor
+
         except Exception as e:
-            raise FoodDeliveryException(e,sys)
+            raise FoodDeliveryException(e, sys)
+
         
     def initiate_data_transformation(self) -> DataTransformationArtifact:
         logging.info("Entered initiate_data_transformation method of DataTransformation class")
 
-        try:
+
+        try:            
             logging.info("Starting Data Transformation")
             train_df = DataTransformation.read_data(self.data_validation_artifact.valid_train_file_path)
             test_df = DataTransformation.read_data(self.data_validation_artifact.valid_test_file_path)
 
-            # Column Unnamed: 14 only has NaN value. 
-            # Columns - ID and Delivery_person_ID are only used for tracking purpose. It wont impact the delivery time prediction
-            
-            columns_to_drop = ['Unnamed: 14', 'ID', 'Delivery_person_ID']
+            logging.info(f"Training data shape before cleaning: {train_df.shape}")
+            logging.info(f"Testing data shape before cleaning: {test_df.shape}")
+
+            # Columns to drop            
+            # Columns - ID and Delivery_person_ID are only used for tracking purpose. It wont impact the delivery time prediction            
+            columns_to_drop = ['ID', 'Delivery_person_ID']
             train_df.drop(columns=columns_to_drop, inplace=True, errors='ignore')
             test_df.drop(columns=columns_to_drop, inplace=True, errors='ignore')
 
             # Since missing values for Restaurant_latitude, Restaurant_longitude means the starting point is unknown, 
-            # we will remove the rows that has these nan values
-            train_df.dropna(subset=['Restaurant_latitude', 'Restaurant_longitude'],inplace=True)
-            test_df.dropna(subset=['Restaurant_latitude', 'Restaurant_longitude'],inplace=True)
+            # we will remove the rows that has these nan values            
+
+            # The output column "TARGET" has 541 missing values. We dont want to include generated data for this column as it impacts the models learning accuracy.
+            # So we will remove the rows that has nan values for column TARGET
+            
+            # Remove rows with missing values in critical columns
+            critical_columns = ['Restaurant_latitude', 'Restaurant_longitude', 'TARGET']
+            train_df.dropna(subset=critical_columns, inplace=True)
+            test_df.dropna(subset=critical_columns, inplace=True)
 
             # For Distance (km), we will use function to calculate distance using OSRM API to fill the missing values. 
             # train_df['Distance (km)'] = train_df.apply(self.calculate_distance, axis=1)
@@ -110,39 +148,57 @@ class DataTransformation:
             train_df.dropna(subset=['Distance (km)'], inplace=True)
             test_df.dropna(subset=['Distance (km)'], inplace=True)
 
-            # The output column "TARGET" has 541 missing values. We dont want to include generated data for this column as it impacts the models learning accuracy.
-            # So we will remove the rows that has nan values for column TARGET
-            train_df.dropna(subset=['TARGET'], inplace=True)
-            test_df.dropna(subset=['TARGET'], inplace=True)
+            # Ensure dataframes are not empty
+            if train_df.empty or test_df.empty:
+                raise FoodDeliveryException("Training or testing data is empty after preprocessing.", sys)
 
+            logging.info(f"Training data shape after cleaning: {train_df.shape}")
+            logging.info(f"Testing data shape after cleaning: {test_df.shape}")
+            
+            # Separate input features and target variable
             # training dataframe
             input_feature_train_df = train_df.drop(columns=[TARGET_COLUMN],axis=1)
             target_feature_train_df = train_df[TARGET_COLUMN]
+            # Ensure target column is numeric
+            target_feature_train_df = pd.to_numeric(target_feature_train_df, errors='coerce')
 
             # testing dataframe
             input_feature_test_df = test_df.drop(columns=[TARGET_COLUMN],axis=1)
             target_feature_test_df = test_df[TARGET_COLUMN]
+            # Ensure target column is numeric
+            target_feature_test_df = pd.to_numeric(target_feature_test_df, errors='coerce')
 
-            # initialize get_data_transformer_object to apply SimpleImputer (on column 'Traffic_Level')
-            processor = self.get_data_transformer_object()
-            preprocessor_object = processor.fit(input_feature_train_df[['Traffic_Level']])
+            # Verify the target variable
+            logging.info(f"Target column (train) dtype: {target_feature_train_df.dtype}")
+            logging.info(f"Target column (test) dtype: {target_feature_test_df.dtype}")
 
-            ## if Imputer was applied to entire df
-            # preprocessor_object = processor.fit(input_feature_train_df)
-            # transformed_input_train_feature = preprocessor_object.transform(input_feature_train_df)
-            # transformed_input_test_feature = preprocessor_object.transform(input_feature_test_df)
+            # # Dynamically detect numerical and categorical columns
+            numerical_columns = input_feature_train_df.select_dtypes(include=['int64', 'float64']).columns.tolist()
+            categorical_columns = input_feature_train_df.select_dtypes(include=['object', 'category']).columns.tolist()
 
-            # Ensure the output is 1D when assigning to a single column
-            input_feature_train_df['Traffic_Level'] = preprocessor_object.transform(input_feature_train_df[['Traffic_Level']])[:, 0]
-            input_feature_test_df['Traffic_Level'] = preprocessor_object.transform(input_feature_test_df[['Traffic_Level']])[:, 0]
+            logging.info(f"Numerical columns: {numerical_columns}")
+            logging.info(f"Categorical columns: {categorical_columns}")
 
-            # train_arr = np.c_[transformed_input_train_feature,np.array(target_feature_train_df)]
-            # test_arr = np.c_[transformed_input_test_feature,np.array(target_feature_test_df)]
+            # check for any leading or trailing whitespace in categorical columns and remove them
+            for col in categorical_columns:
+                input_feature_train_df[col] = input_feature_train_df[col].str.strip()
+                input_feature_test_df[col] = input_feature_test_df[col].str.strip()
 
-            # The SimpleImputer transformation only affects a specific column (Traffic_Level) within the pandas DataFrame. 
-            # The features are still pandas DataFrames, so we need to convert the entire feature set into a NumPy array.
-            train_arr = np.c_[input_feature_train_df.to_numpy(), target_feature_train_df.to_numpy()]
-            test_arr = np.c_[input_feature_test_df.to_numpy(), target_feature_test_df.to_numpy()]
+            # # Restrict columns to numerical and categorical columns for train and test
+            # input_feature_train_df = input_feature_train_df[numerical_columns + categorical_columns]
+
+            # Align test dataset columns with train dataset
+            input_feature_test_df = input_feature_test_df.reindex(columns=input_feature_train_df.columns, fill_value=0)            
+
+            # Get the preprocessing object
+            processor = self.get_data_transformer_object(numerical_columns=numerical_columns, categorical_columns=categorical_columns)
+            preprocessor_object = processor.fit(input_feature_train_df)            
+            transformed_input_train_feature = preprocessor_object.transform(input_feature_train_df)
+            transformed_input_test_feature = preprocessor_object.transform(input_feature_test_df)            
+
+            # Combine transformed features with the target variable
+            train_arr = np.c_[transformed_input_train_feature,np.array(target_feature_train_df)]
+            test_arr = np.c_[transformed_input_test_feature,np.array(target_feature_test_df)]            
 
             # save numpy array data
             save_numpy_array_data(self.data_transformation_config.transformed_train_file_path, array=train_arr)

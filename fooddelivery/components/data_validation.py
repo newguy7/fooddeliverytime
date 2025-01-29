@@ -133,6 +133,9 @@ class DataValidation:
                 d1 = base_df[column].dropna()
                 d2 = current_df[column].dropna()
 
+                if d1.empty or d2.empty:
+                    raise ValueError("Train or Test dataset is empty! Please check your data ingestion process.")
+
                 is_sample_dist = ks_2samp(d1,d2)
                 p_value = is_sample_dist.pvalue
                 is_drift_detected = p_value < threshold

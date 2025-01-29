@@ -41,6 +41,9 @@ class DataIngestion:
                 df = df.drop(columns=["_id"],axis=1)
 
             df.replace({"na":np.nan},inplace=True)
+
+            # Remove columns with all nan values
+            df = df.dropna(axis=1, how="all")
             return df
         
         except Exception as e:
@@ -60,9 +63,16 @@ class DataIngestion:
         
     def split_data_as_train_test(self,dataframe: pd.DataFrame):
         try:
+            if dataframe.empty:
+                raise ValueError("Dataset is empty after preprocessing! Check data ingestion.")
+            
             train_set, test_set = train_test_split(
                 dataframe, test_size=self.data_ingestion_config.train_test_split_ratio
             )
+
+            if train_set.empty or test_set.empty:
+                raise ValueError("Train or Test dataset is empty after splitting! Adjust the test size.")
+            
             logging.info("Performed train test split on the dataframe.")
 
             logging.info("Exited split_data_as_train_test method of Data_Ingestion class.")
