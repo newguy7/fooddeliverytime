@@ -1,0 +1,68 @@
+Delivery_location_latitude:
+  drift_status: false
+  p_value: 0.669515204845374
+  type: numerical
+Delivery_location_longitude:
+  drift_status: false
+  p_value: 0.5575331945371534
+  type: numerical
+Delivery_person_Age:
+  drift_status: false
+  p_value: 0.7633792965159
+  type: numerical
+Delivery_person_ID:
+  drift_status: false
+  p_value: 1.0
+  type: categorical
+Delivery_person_Ratings:
+  drift_status: false
+  p_value: 0.9251510860264034
+  type: numerical
+Distance (km):
+  drift_status: false
+  p_value: 0.9805651447435156
+  type: numerical
+ID:
+  drift_status: false
+  p_value: 1.0
+  type: categorical
+Restaurant_latitude:
+  drift_status: false
+  p_value: 0.7045934883111852
+  type: numerical
+Restaurant_longitude:
+  drift_status: false
+  p_value: 0.19995331016228068
+  type: numerical
+TARGET:
+  drift_status: false
+  p_value: 1.0
+  type: categorical
+Traffic_Level:
+  drift_status: false
+  p_value: 0.9999999460365235
+  type: categorical
+Type_of_order:
+  drift_status: false
+  p_value: 0.9999994625591929
+  type: categorical
+Type_of_vehicle:
+  drift_status: false
+  p_value: 0.9999946893619053
+  type: categorical
+humidity:
+  drift_status: false
+  p_value: 0.9150091597234026
+  type: numerical
+precipitation:
+  drift_status: false
+  p_value: 1.0
+  type: numerical
+temperature:
+  drift_status: false
+  p_value: 0.9435395945779115
+  type: numerical
+weather_description:
+  drift_status: false
+  p_value: 1.0
+  type: categorical
