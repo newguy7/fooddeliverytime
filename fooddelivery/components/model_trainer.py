@@ -46,18 +46,18 @@ class ModelTrainer:
         
     ## Model experiment tracking with MLFlow    
 
-    # def track_mlflow(self,best_model,regressionmetric):
-    #     with mlflow.start_run():
-    #         mae_value = regressionmetric.mae_value
-    #         rmse_value = regressionmetric.rmse_value
-    #         r2_value = regressionmetric.r2_value
-    #         mape_value = regressionmetric.mape_value
+    def track_mlflow(self,best_model,regressionmetric):
+        with mlflow.start_run():
+            mae_value = regressionmetric.mae_value
+            rmse_value = regressionmetric.rmse_value
+            r2_value = regressionmetric.r2_value
+            mape_value = regressionmetric.mape_value
             
-    #         mlflow.log_metric("mae_value", mae_value)
-    #         mlflow.log_metric("rmse_value", rmse_value)
-    #         mlflow.log_metric("r2_value", r2_value)
-    #         mlflow.log_metric("mape_value", mape_value)
-    #         mlflow.sklearn.log_model(best_model, "model")
+            mlflow.log_metric("mae_value", mae_value)
+            mlflow.log_metric("rmse_value", rmse_value)
+            mlflow.log_metric("r2_value", r2_value)
+            mlflow.log_metric("mape_value", mape_value)
+            mlflow.sklearn.log_model(best_model, "model")
 
     def train_model(self,X_train,y_train,X_test,y_test):
         try:
@@ -118,9 +118,15 @@ class ModelTrainer:
             y_train_pred = best_model.predict(X_train)
             regression_train_metric = get_regression_value(y_true=y_train, y_pred=y_train_pred)
 
+            # Track the experiment with MLFlow
+            self.track_mlflow(best_model,regression_train_metric)
 
             y_test_pred = best_model.predict(X_test)
             regression_test_metric = get_regression_value(y_true=y_test, y_pred=y_test_pred)
+
+            # Track with MLFlow
+            self.track_mlflow(best_model, regression_test_metric)
+
 
             preprocessor = load_object(file_path=self.data_transformation_artifact.transformed_object_file_path)
 
