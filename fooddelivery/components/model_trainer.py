@@ -117,6 +117,9 @@ class ModelTrainer:
 
             best_model = models[best_model_name]
 
+            logging.info(f"The best model selected: {best_model_name}")
+            logging.info(f"Best model detail: {best_model}")
+
             y_train_pred = best_model.predict(X_train)
             regression_train_metric = get_regression_value(y_true=y_train, y_pred=y_train_pred)
 
