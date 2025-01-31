@@ -65,7 +65,7 @@ jobs:
 
   # # Run this After Continuous Delivery Only
   Continuous-Deployment:
-    needs: build-push-ecr-image
+    needs: build-and-push-ecr-image
     runs-on: self-hosted #name of apprunner/event listener
     steps:
       - name: Checkout
