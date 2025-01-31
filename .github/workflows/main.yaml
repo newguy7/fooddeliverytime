@@ -46,8 +46,7 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-        with:
-          registry-type: public
+        
 
       - name: Build, tag and push image to Amazon ECR
         id: build-image
@@ -63,7 +62,7 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-  # # Run this After Continuous Delivery Only
+  # Continuous Deployment
   Continuous-Deployment:
     needs: build-and-push-ecr-image
     runs-on: self-hosted #name of apprunner/event listener
@@ -81,9 +80,6 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-        with:
-          registry-type: public
-
 
       - name: Pull latest images
         run: | 
