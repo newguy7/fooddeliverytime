@@ -58,8 +58,8 @@ jobs:
           # push it to the ECR so that it can
           # be deployed to ECS
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "::set-output name=image::ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
   # # Continuous Deployment
   # Continuous-Deployment:
@@ -88,11 +88,11 @@ jobs:
   #     ## if same name container is running
   #     # - name: Stop and remove container if running
   #     # run: |
-  #     #    docker ps -q --filter "name=fooddelivery" | grep -q . && docker stop networksecurity && docker rm -fv networksecurity
+  #     #    docker ps -q --filter "name=fooddelivery" | grep -q . && docker stop fooddelivery && docker rm -fv fooddelivery
 
   #     - name: Run Docker Image to serve users
   #       run: | 
-  #         docker run -d -p 8080:8080 --ipc="host" --name=fooddelivery -e 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}' -e 'AWS_SECRET_KEY_ACCESS=${{ secrets.AWS_SECRET_ACCESS_KEY }}' -e AWS_REGION=${{ secrets.AWS_REGION }}' ${{secrets.AWS_ECR_LOGIN_URI}}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
+  #         docker run -d -p 8080:8080 --ipc="host" --name=fooddelivery -e 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}' -e 'AWS_SECRET_KEY_ACCESS=${{ secrets.AWS_SECRET_ACCESS_KEY }}' -e 'AWS_REGION=${{ secrets.AWS_REGION }}' ${{secrets.AWS_ECR_LOGIN_URI}}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
   #     - name: Clean previous images and containers
   #       run: | 
   #         docker system prune -f
