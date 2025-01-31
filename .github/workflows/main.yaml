@@ -88,7 +88,7 @@ jobs:
       ## if same name container is running
       # - name: Stop and remove container if running
       # run: 
-      #    docker ps -q --filter "name=networksecurity" | grep -q . && docker stop networksecurity && docker rm -fv networksecurity
+      #    docker ps -q --filter "name=fooddelivery" | grep -q . && docker stop networksecurity && docker rm -fv networksecurity
 
       - name: Run Docker Image to serve users
         run: 
