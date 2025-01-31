@@ -63,7 +63,7 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-  # # After Continuous Delivery Only
+  # # Run this After Continuous Delivery Only
   Continuous-Deployment:
     needs: build-push-ecr-image
     runs-on: self-hosted #name of apprunner/event listener
