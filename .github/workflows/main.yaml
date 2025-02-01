@@ -84,7 +84,7 @@ jobs:
 
       - name: Pull latest images
         run: | 
-          docker pull ${{steps.login-ecr.outputs.registry}}/${{ secrets.ECR_REPOSITORY_NAME }}:latest          
+          docker pull ${{secrets.AWS_ECR_LOGIN_URI}}/${{ secrets.ECR_REPOSITORY_NAME }}:latest          
 
       # if same name container is running
       - name: Stop and remove container if running
@@ -92,13 +92,18 @@ jobs:
           docker stop fooddelivery || true
           docker rm -fv fooddelivery || true
 
-      - name: Run Docker Image to serve users
-        run: | 
+      - name: Print Docker Image Name
+        run: |
+          echo "Using image: ${{ secrets.AWS_ECR_LOGIN_URI }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest"
+
+      - name: Run Docker Image
+        run: |
           docker run -d -p 8080:8000 --ipc="host" --name=fooddelivery \
-          -e 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}' \
-          -e 'AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}' \
-          -e 'AWS_REGION=${{ secrets.AWS_REGION }}'\
-          ${{steps.login-ecr.outputs.registry}}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
+            -e 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}' \
+            -e 'AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}' \
+            -e 'AWS_REGION=${{ secrets.AWS_REGION }}' \
+            ${{ secrets.AWS_ECR_LOGIN_URI }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
+
 
       - name: Clean previous images and containers
         run: | 
