@@ -38,6 +38,11 @@ import dagshub
 
 DAGSHUB_USER = os.getenv("DAGSHUB_USER")
 DAGSHUB_TOKEN = os.getenv("DAGSHUB_TOKEN")
+DAGSHUB_HOST = "https://dagshub.com"
+
+# Debugging: Print values to ensure they're set (Remove in production)
+if not DAGSHUB_USER or not DAGSHUB_TOKEN:
+    raise ValueError("DAGSHUB_USER or DAGSHUB_TOKEN is missing!")
 
 # Authenticate with Dagshub before initializing MLflow tracking
 dagshub.auth.add_app_token(DAGSHUB_USER, DAGSHUB_TOKEN)
