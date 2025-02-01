@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 mongo_db_url = os.getenv("MONGO_DB_URL")
-print(mongo_db_url)
 
 import pymongo
 from fooddelivery.exception.exception import FoodDeliveryException
@@ -94,4 +93,4 @@ async def predict_route(request:Request, file:UploadFile=File(...)):
         raise FoodDeliveryException(e,sys)
 
 if __name__ == "__main__":
-    app_run(app,host="0.0.0.0",port=8000, reload=True)
+    app_run(app,host="0.0.0.0",port=8000)

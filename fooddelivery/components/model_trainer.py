@@ -23,8 +23,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import (
     AdaBoostRegressor,
     GradientBoostingRegressor,
-    RandomForestRegressor,
-        
+    RandomForestRegressor,        
 )
 import xgboost
 from xgboost import XGBRegressor
@@ -45,7 +44,7 @@ if not DAGSHUB_USER or not DAGSHUB_TOKEN:
     raise ValueError("DAGSHUB_USER or DAGSHUB_TOKEN is missing!")
 
 # Authenticate with Dagshub before initializing MLflow tracking
-dagshub.auth.add_app_token(DAGSHUB_USER, DAGSHUB_TOKEN, host=DAGSHUB_HOST)
+dagshub.auth.add_app_token(token=DAGSHUB_TOKEN, host=DAGSHUB_HOST)
 
 dagshub.init(repo_owner='newguy7', repo_name='fooddeliverytime', mlflow=True)
 
