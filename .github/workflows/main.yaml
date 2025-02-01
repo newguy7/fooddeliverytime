@@ -85,10 +85,10 @@ jobs:
         run: | 
           docker pull ${{secrets.AWS_ECR_LOGIN_URI}}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
 
-      ## if same name container is running
-      # - name: Stop and remove container if running
-      # run: |
-      #    docker ps -q --filter "name=fooddelivery" | grep -q . && docker stop fooddelivery && docker rm -fv fooddelivery
+      # if same name container is running
+      - name: Stop and remove container if running
+        run: |
+          docker ps -q --filter "name=fooddelivery" | grep -q . && docker stop fooddelivery && docker rm -fv fooddelivery
 
       - name: Run Docker Image to serve users
         run: | 
