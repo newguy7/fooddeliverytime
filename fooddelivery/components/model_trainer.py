@@ -35,6 +35,13 @@ import mlflow
 
 # Track MLFLOW EXPERIMENT TRACKING WITH REMOTE RESPONSE
 import dagshub
+
+DAGSHUB_USER = os.getenv("DAGSHUB_USER")
+DAGSHUB_TOKEN = os.getenv("DAGSHUB_TOKEN")
+
+# Authenticate with Dagshub before initializing MLflow tracking
+dagshub.auth.add_app_token(DAGSHUB_USER, DAGSHUB_TOKEN)
+
 dagshub.init(repo_owner='newguy7', repo_name='fooddeliverytime', mlflow=True)
 
 
