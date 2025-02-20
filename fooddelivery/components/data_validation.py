@@ -190,7 +190,7 @@ class DataValidation:
         except Exception as e:
             raise FoodDeliveryException(e,sys)
         
-    def initiate_data_validation(self) -> DataIngestionArtifact:
+    def initiate_data_validation(self) -> DataValidationArtifact:
         try:
             train_file_path = self.data_ingestion_artifact.trained_file_path
             test_file_path = self.data_ingestion_artifact.test_file_path
